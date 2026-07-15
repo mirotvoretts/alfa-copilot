@@ -8,7 +8,6 @@ frontend := "frontend"
 default:
     just --list
 
-# Format every language in place. Fast.
 fmt: fmt-cpp fmt-py fmt-rust fmt-ts
 
 fmt-cpp:
@@ -24,27 +23,34 @@ fmt-rust:
 fmt-ts:
     cd {{frontend}} && npx prettier --write .
 
-# Pre-commit gate: format-check plus lint, no tests. Fast.
 check: check-cpp check-py check-rust check-ts
 
 check-cpp:
-    find {{engine}}/src {{engine}}/tests -type f \( -name '*.cpp' -o -name '*.hpp' \) -print0 \
-        | xargs -0 -r clang-format --dry-run --Werror
+    #!/usr/bin/env bash
+    set -euo pipefail
+    files=$(find {{engine}}/src {{engine}}/tests -type f \( -name '*.cpp' -o -name '*.hpp' \))
+    if [ -z "$files" ]; then echo "check-cpp: no C++ sources yet, skipping"; exit 0; fi
+    echo "$files" | xargs clang-format --dry-run --Werror
     cppcheck --enable=warning,performance,portability --error-exitcode=1 --std=c++20 {{engine}}/src
 
 check-py:
-    cd {{orchestrator}} && ruff format --check .
-    cd {{orchestrator}} && ruff check .
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if ! find {{orchestrator}}/src {{orchestrator}}/tests -type f -name '*.py' | grep -q .; then echo "check-py: no Python sources yet, skipping"; exit 0; fi
+    cd {{orchestrator}} && ruff format --check . && ruff check .
 
 check-rust:
-    cd {{gateway}} && cargo fmt --check
-    cd {{gateway}} && cargo clippy --all-targets --locked -- -D warnings
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if ! find {{gateway}}/src -type f -name '*.rs' | grep -q .; then echo "check-rust: no Rust sources yet, skipping"; exit 0; fi
+    cd {{gateway}} && cargo fmt --check && cargo clippy --all-targets --locked -- -D warnings
 
 check-ts:
-    cd {{frontend}} && npx prettier --check .
-    cd {{frontend}} && npx eslint .
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if ! find {{frontend}}/src -type f \( -name '*.ts' -o -name '*.tsx' \) | grep -q .; then echo "check-ts: no TS sources yet, skipping"; exit 0; fi
+    cd {{frontend}} && npx prettier --check . && npx eslint .
 
-# Hard gate for CI: strict format-check, strict lint, type check, full tests.
 ci: ci-cpp ci-py ci-rust ci-ts
 
 ci-cpp: check-cpp
@@ -64,7 +70,5 @@ ci-ts: check-ts
     cd {{frontend}} && npx tsc --noEmit
     cd {{frontend}} && npx vitest run
 
-# Install the pre-commit hook that runs 'just check'.
 hooks:
-    printf '%s\n' '#!/usr/bin/env bash' 'set -e' 'just check' > .git/hooks/pre-commit
-    chmod +x .git/hooks/pre-commit
+    git config core.hooksPath .githooks
