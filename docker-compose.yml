@@ -1,0 +1,37 @@
+services:
+  financial-engine:
+    build: ./services/financial-engine
+    expose:
+      - "50051"
+
+  ai-orchestrator:
+    build: ./services/ai-orchestrator
+    environment:
+      LLM_PROVIDER: ${LLM_PROVIDER:-mock}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_BASE_URL: ${LLM_BASE_URL:-}
+      FINANCIAL_ENGINE_ADDR: financial-engine:50051
+    expose:
+      - "50052"
+    depends_on:
+      - financial-engine
+
+  gateway:
+    build: ./services/gateway
+    environment:
+      FINANCIAL_ENGINE_ADDR: financial-engine:50051
+      AI_ORCHESTRATOR_ADDR: ai-orchestrator:50052
+    ports:
+      - "8080:8080"
+    depends_on:
+      - financial-engine
+      - ai-orchestrator
+
+  frontend:
+    build: ./frontend
+    environment:
+      GATEWAY_URL: http://gateway:8080
+    ports:
+      - "5173:5173"
+    depends_on:
+      - gateway
