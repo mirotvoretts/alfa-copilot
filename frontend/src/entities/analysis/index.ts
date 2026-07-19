@@ -1,3 +1,5 @@
+export { runAnalysis } from './model/analysisStream';
+export type { AnalysisEvent, AnalysisStepId, AnalysisStreamOptions } from './model/analysisStream';
 export { classifyRisk } from './model/classifyRisk';
 export { computeDiagnostics } from './model/computeDiagnostics';
 export { forecastCashGap } from './model/forecastCashGap';
