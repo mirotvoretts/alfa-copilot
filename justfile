@@ -54,15 +54,24 @@ check-ts:
 ci: ci-cpp ci-py ci-rust ci-ts
 
 ci-cpp: check-cpp
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if ! find {{engine}}/src -type f -name '*.cpp' | grep -q .; then echo "ci-cpp: no C++ sources yet, skipping"; exit 0; fi
     cmake -S {{engine}} -B {{engine}}/build -DCMAKE_BUILD_TYPE=Release
     cmake --build {{engine}}/build
     ctest --test-dir {{engine}}/build --output-on-failure
 
 ci-py: check-py
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if ! find {{orchestrator}}/src -type f -name '*.py' | grep -q .; then echo "ci-py: no Python sources yet, skipping"; exit 0; fi
     cd {{orchestrator}} && mypy --strict src tests
     cd {{orchestrator}} && pytest
 
 ci-rust: check-rust
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if ! find {{gateway}}/src -type f -name '*.rs' | grep -q .; then echo "ci-rust: no Rust sources yet, skipping"; exit 0; fi
     cd {{gateway}} && cargo audit
     cd {{gateway}} && cargo test --locked
 

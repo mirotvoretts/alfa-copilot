@@ -160,6 +160,16 @@ docker compose up
 
 Фронтенд поднимется на `http://localhost:5173`, шлюз - на `http://localhost:8080`.
 
+### Онлайн-демо (GitHub Pages)
+
+Статическая версия демо живет на `https://<owner>.github.io/alfa-copilot/`. Пайплайн в ней
+выполняется прямо в браузере: те же детерминированные данные и mock-LLM, что и в полном
+стеке, поэтому результат идентичен при каждом запуске.
+
+Деплой автоматический: workflow `deploy-pages.yml` собирает фронтенд и публикует его при
+каждом пуше в `main`. Единственная разовая настройка в репозитории: **Settings → Pages →
+Build and deployment → Source: GitHub Actions**.
+
 ### Структура проекта
 
 ```
@@ -327,6 +337,16 @@ By default `LLM_PROVIDER=mock` - the demo runs without a paid API key and return
 result on every run. To use a real LLM, set `LLM_PROVIDER` and the key in `.env`.
 
 The frontend comes up on `http://localhost:5173`, the gateway on `http://localhost:8080`.
+
+### Live demo (GitHub Pages)
+
+A static version of the demo lives at `https://<owner>.github.io/alfa-copilot/`. Its pipeline
+runs right in the browser with the same deterministic data and mock LLM as the full stack, so
+every run produces the identical result.
+
+Deployment is automatic: the `deploy-pages.yml` workflow builds the frontend and publishes it
+on every push to `main`. The only one-time repository setting: **Settings → Pages → Build and
+deployment → Source: GitHub Actions**.
 
 ### Project structure
 
