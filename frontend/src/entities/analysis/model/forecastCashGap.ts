@@ -4,7 +4,8 @@ import { addDays } from 'shared/lib';
 import type { CashGapForecast, ForecastConfidence } from './types';
 
 const longWindowDays = 28;
-const shortWindowDays = 14;
+const nearHorizonDays = 7;
+const clearHorizonDays = 21;
 
 const burnOverWindow = (balances: readonly DailyBalance[], windowDays: number): number => {
   const last = balances[balances.length - 1];
@@ -15,15 +16,11 @@ const burnOverWindow = (balances: readonly DailyBalance[], windowDays: number): 
   return (first.balance - last.balance) / windowDays;
 };
 
-const confidenceFromWindows = (longBurn: number, shortBurn: number): ForecastConfidence => {
-  if (longBurn <= 0 || shortBurn <= 0) {
-    return 'низкая';
-  }
-  const deviation = Math.abs(shortBurn - longBurn) / longBurn;
-  if (deviation < 0.25) {
+const confidenceFromHorizon = (daysUntilGap: number): ForecastConfidence => {
+  if (daysUntilGap < nearHorizonDays) {
     return 'высокая';
   }
-  if (deviation < 0.6) {
+  if (daysUntilGap <= clearHorizonDays) {
     return 'средняя';
   }
   return 'низкая';
@@ -34,7 +31,6 @@ export const forecastCashGap = (
   scenario: DemoScenario,
 ): CashGapForecast => {
   const longBurn = burnOverWindow(balances, longWindowDays);
-  const shortBurn = burnOverWindow(balances, shortWindowDays);
   const balanceToday = balances[balances.length - 1]?.balance ?? 0;
 
   if (longBurn <= 0 || balanceToday <= 0) {
@@ -46,6 +42,6 @@ export const forecastCashGap = (
     daysUntilGap,
     gapDate: addDays(scenario.todayDate, daysUntilGap),
     dailyBurn: longBurn,
-    confidence: confidenceFromWindows(longBurn, shortBurn),
+    confidence: confidenceFromHorizon(daysUntilGap),
   };
 };
